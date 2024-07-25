@@ -11,7 +11,6 @@ exports.createBook = (req, res, next) => {
   const bookObject = JSON.parse(req.body.book);
   delete bookObject._userId;
   delete bookObject._id;
-  console.log(bookObject);
   // On créer un nouveur thing, avec l'user ID provenant du token, et une URL d'image
   const book = new Book({
     ...bookObject,
@@ -23,6 +22,7 @@ exports.createBook = (req, res, next) => {
     const imagePath = `images/${req.file.filename}`;
     const optimizedImagePath = `images/optimized-${req.file.filename}`;
     //On compresse l'image
+
     sharp(imagePath)
       .resize(400, 600)
       .toFile(optimizedImagePath, (err, info) => {
@@ -33,8 +33,14 @@ exports.createBook = (req, res, next) => {
 
         // Mise à jour de l'image URL pour utiliser l'image optimisée
         book.imageUrl = `${req.protocol}://${req.get("host")}/images/optimized-${req.file.filename}`;
-        // On supprime l'image originelle
-        fs.unlink(imagePath, (err) => console.log(err));
+        // On supprime l'image originelle -- HELP
+        setTimeout(() => {
+          fs.unlink(imagePath, (err) => {
+            if (err) {
+              console.error(`Erreur lors de la suppression du fichier ${imagePath}: `, err.message);
+            }
+          });
+        }, 1000);
         // Sauvegarder le livre avec l'image optimisée
         book
           .save()
@@ -55,16 +61,16 @@ exports.createBook = (req, res, next) => {
 
 // GESTION DU DELETE
 exports.deleteBook = (req, res, next) => {
-  if (thing.userId != req.auth.userId) {
-    res.status(403).json({ message: "Unauthorized requesr" });
-    // Si le user est le bon
-  } else {
-    // On récupère l'objet dans la base de donnée
-    Book.findOne({ _id: req.params.id })
-      .then((book) => {
+  // On récupère l'objet dans la base de donnée
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      if (book.userId != req.auth.userId) {
+        res.status(403).json({ message: "Unauthorized request" });
+        // Si le user est le bon
+      } else {
         // On recréer le filename
         const filename = book.imageUrl.split("/images/")[1];
-        // On supprime le fichier, d'abord avec la function unlink pour le fichier, puis avec un callback pour le Thing
+        // On supprime le fichier, puis le livre enregistré
         fs.unlink(`images/${filename}`, () => {
           Book.deleteOne({ _id: req.params.id })
             .then(() => {
@@ -72,11 +78,11 @@ exports.deleteBook = (req, res, next) => {
             })
             .catch((error) => res.status(401).json({ error }));
         });
-      })
-      .catch((error) => {
-        res.status(500).json({ error });
-      });
-  }
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
 };
 
 // GESTION DU GET OBJET UNIQUE
@@ -121,23 +127,12 @@ exports.editBook = (req, res, next) => {
           }
         : // Si non, on envoie directement le body de la requête
           { ...req.body };
-      if (bookObject.imageUrl) {
-        const imagePath = `images/${req.file.filename}`;
-        const optimizedImagePath = `images/optimized-${req.file.filename}`;
-        //On compresse l'image
-        sharp(imagePath)
-          .resize(400, 600)
-          .toFile(optimizedImagePath, (err, info) => {
-            // Gestion d'erreur
-            if (err) {
-              return res.status(500).json({ error: err.message });
-            }
+      // Si on a un fichier, on supprime l'ancienne image, puis on crée une nouvelle image -- HELP
 
-            // Mise à jour de l'image URL pour utiliser l'image optimisée
-            bookObject.imageUrl = `${req.protocol}://${req.get("host")}/images/optimized-${req.file.filename}`;
-          });
+      if (req.file) {
+        const originalImageUrl = book.imageUrl.split("/images/")[1];
+        fs.unlink(`images/${originalImageUrl}`, (err) => console.log(err));
       }
-      // 1) quel est l'enregistrement à mettre à jour 2) avec quel objet on le met à jour
       Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
         .then(() => res.status(200).json({ message: "Livre modifié" }))
         .catch((error) => res.status(401).json({ error }));

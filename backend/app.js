@@ -1,13 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
-// require("dotenv").config();
+require("dotenv").config();
 const app = express();
 const userRoutes = require("./routes/user");
 const booksRoutes = require("./routes/books");
 
 mongoose
-  .connect("mongodb+srv://damiendacunha64:test123@cluster0.6ewfsky.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("Connexion à MongoDB réussie !"))
   .catch(() => console.log("Connexion à MongoDB échouée !"));
 
