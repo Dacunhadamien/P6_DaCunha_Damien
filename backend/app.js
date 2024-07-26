@@ -21,6 +21,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Toute demande sur le chemin /images sera gérée par le middleware express.static.
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/api/auth", userRoutes);
 app.use("/api/books", booksRoutes);

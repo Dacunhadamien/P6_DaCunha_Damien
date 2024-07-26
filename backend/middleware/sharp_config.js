@@ -18,7 +18,6 @@ module.exports = (req, res, next) => {
     sharp.cache(false);
     // On compresse l'image
     sharp(path)
-      .resize(410)
       .webp({ quality: 20 })
       // On l'enregistre dans /images avec le nouveau nom
       .toFile("./images/" + ref)

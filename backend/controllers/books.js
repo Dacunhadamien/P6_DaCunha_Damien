@@ -127,7 +127,7 @@ exports.editBook = (req, res, next) => {
           }
         : // Si non, on envoie directement le body de la requête
           { ...req.body };
-      // Si on a un fichier, on supprime l'ancienne image, puis on crée une nouvelle image -- HELP
+      // Si on a un fichier, on supprime l'ancienne image, puis on crée une nouvelle image
 
       if (req.file) {
         const originalImageUrl = book.imageUrl.split("/images/")[1];
