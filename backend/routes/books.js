@@ -2,6 +2,7 @@
 const express = require("express");
 // On importe le routing
 const router = express.Router();
+// On importe sharp
 const sharp = require("../middleware/sharp_config");
 
 // On importe les fonctions pour le router

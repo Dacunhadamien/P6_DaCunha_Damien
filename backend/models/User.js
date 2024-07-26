@@ -9,7 +9,7 @@ const userSchema = mongoose.Schema({
   password: { type: String, required: true },
 });
 
-// On applique Unique Validator sur notre schéma
+// On applique Unique Validator sur notre schéma, pour bien vérifier que le compte est unique
 userSchema.plugin(uniqueValidator);
 
 module.exports = mongoose.model("User", userSchema);
